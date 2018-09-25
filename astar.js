@@ -1,139 +1,24 @@
 const grid = {
-// RENDERING INFO
+
+    // RENDERING INFO
     c: document.getElementById("grid"),
     ctx: 0,
 
-    squaresPerRow: 10,
     spacing: 2,
+    squaresPerRow: 10,
     squareSize: 10,
 
     width: 10,
     height: 10,
 
-// NODE INFO 
+    // NODE INFO 
     node: [],  
     untestedNodes: [],  
-    goalIndex: 97,
     startIndex: 2,
+    goalIndex: 97,
 
-    render: function() {
-        for(let x = 0; x < this.width; ++x){
-            for(let y = 0; y < this.height; ++y){
+    // FUNCTIONS
 
-                // Calculates index of current node
-                let index = (x) + (y*this.width); 
-
-                // Color of start square
-                if(this.startIndex===index) ctx.fillStyle="#00FF00";
-                // Color goal
-                else if(this.goalIndex===index) ctx.fillStyle="#FF0000";
-                // Color obstacle
-                else if(this.node[index].hasObstacle) ctx.fillStyle="#888888";
-                // Color visited square
-                else if(this.node[index].isVisited) ctx.fillStyle="#0000ff";
-                // default baby blue
-                else ctx.fillStyle="#ABCDEF";
-    
-                ctx.fillRect(
-                    x * (this.squareSize + this.spacing), 
-                    y * (this.squareSize + this.spacing), 
-                    this.squareSize, this.squareSize
-                );
-
-                // Color path from goal to start
-                ctx.fillStyle="#000000";
-                let parentNode = this.node[this.goalIndex].parentNode;
-                while(parentNode !== -1){
-                    ctx.fillRect(
-                        this.node[parentNode].x * (this.squareSize + this.spacing), 
-                        this.node[parentNode].y * (this.squareSize + this.spacing), 
-                        this.squareSize, this.squareSize
-                    );
-                    parentNode = this.node[parentNode].parentNode;
-                }
-            }
-        }
-    },
-
-    toggleObstacle: function(x, y) {
-        const index = (x) + (y*this.width);
-        if(this.node[index].hasObstacle) this.node[index].hasObstacle = false;
-        else this.node[index].hasObstacle = true;
-    },
-
-    // MOUSE FUNCTIONS
-    mouseClick: function(e) {
-        // fix for scrolling...
-        const offsetX = grid.c.offsetLeft;
-        const offsetY = grid.c.offsetTop;
-        const x = Math.floor((e.clientX - offsetX) /(grid.squareSize+grid.spacing));
-        const y = Math.floor((e.clientY - offsetY) /(grid.squareSize+grid.spacing));
-        grid.toggleObstacle(x, y);
-        grid.calculate();
-        grid.render();
-    },
-    
-    init: function() {
-
-        // get the drawing context and set the square size
-        ctx =  this.c.getContext("2d");
-        this.squareSize = (this.c.width / this.squaresPerRow) - this.spacing;
-
-        // create nodes
-        for(let index = 0; index < this.squaresPerRow * this.squaresPerRow; index++) {
-            this.node.push(new Node());
-            this.node[index].x = index % this.squaresPerRow;
-            this.node[index].y = Math.floor(index / this.squaresPerRow); 
-        }
-
-        // Event listener
-        this.c.addEventListener('click', this.mouseClick);
-
-        // Initial rendering
-        this.render();
-        this.createNeighbourhood();
-        this.calculate();
-    },
-
-    // Resets all nodes
-    reset: function() {
-        this.node.forEach((nodette) => {
-            nodette.isVisited = false;
-            nodette.distanceGoal = Infinity;
-            nodette.distanceStart = Infinity;
-            nodette.parentNode = -1;
-        })
-    },
-
-    // Adds connections between neighbours
-    createNeighbourhood: function() {
-        for(let x = 0; x < this.width; ++x){
-            for(let y = 0; y < this.height; ++y){
-                let index = (x) + (y*this.width);
-
-                // Row above
-                if(y > 0) {
-                    let above = (x) + ((y-1)*this.width);
-                    if(x>0) this.node[index].neighbours.push(above - 1);
-                    this.node[index].neighbours.push(above);
-                    if(x<this.width-1) this.node[index].neighbours.push(above + 1);
-                }
-
-                // Same row
-                if(x>0) this.node[index].neighbours.push(index - 1);
-                if(x<this.width - 1) this.node[index].neighbours.push(index + 1);
-
-                // Row below
-                if(y < this.height - 1) {
-                    let below = (x) + ((y+1)*this.width);
-                    if(x>0) this.node[index].neighbours.push(below - 1);
-                    this.node[index].neighbours.push(below);
-                    if(x<this.width-1) this.node[index].neighbours.push(below + 1);
-                }
-            }
-        }
-    },
-    
     // Calculates the path (pathfinding function)
     calculate: function() {
 
@@ -242,8 +127,130 @@ const grid = {
                 }
             }
         }
-        console.log("Pathfinding completed...");
-    }
+    },
+
+    // Adds connections between neighbours
+    createNeighbourhood: function() {
+        for(let x = 0; x < this.width; ++x){
+            for(let y = 0; y < this.height; ++y){
+                let index = (x) + (y*this.width);
+
+                // Row above
+                if(y > 0) {
+                    let above = (x) + ((y-1)*this.width);
+                    if(x>0) this.node[index].neighbours.push(above - 1);
+                    this.node[index].neighbours.push(above);
+                    if(x<this.width-1) this.node[index].neighbours.push(above + 1);
+                }
+
+                // Same row
+                if(x>0) this.node[index].neighbours.push(index - 1);
+                if(x<this.width - 1) this.node[index].neighbours.push(index + 1);
+
+                // Row below
+                if(y < this.height - 1) {
+                    let below = (x) + ((y+1)*this.width);
+                    if(x>0) this.node[index].neighbours.push(below - 1);
+                    this.node[index].neighbours.push(below);
+                    if(x<this.width-1) this.node[index].neighbours.push(below + 1);
+                }
+            }
+        }
+    },
+
+    // Initialize all
+    init: function() {
+
+        // get the drawing context and set the square size
+        ctx =  this.c.getContext("2d");
+        this.squareSize = (this.c.width / this.squaresPerRow) - this.spacing;
+
+        // create nodes
+        for(let index = 0; index < this.squaresPerRow * this.squaresPerRow; index++) {
+            this.node.push(new Node());
+            this.node[index].x = index % this.squaresPerRow;
+            this.node[index].y = Math.floor(index / this.squaresPerRow); 
+        }
+
+        // Event listener
+        this.c.addEventListener('click', this.mouseClick);
+
+        // Initial rendering
+        this.render();
+        this.createNeighbourhood();
+        this.calculate();
+    },
+
+    // MOUSE FUNCTIONS
+    mouseClick: function(e) {
+        // fix for scrolling...
+        const offsetX = grid.c.offsetLeft;
+        const offsetY = grid.c.offsetTop;
+        const x = Math.floor((e.clientX - offsetX) /(grid.squareSize+grid.spacing));
+        const y = Math.floor((e.clientY - offsetY) /(grid.squareSize+grid.spacing));
+        grid.toggleObstacle(x, y);
+        grid.calculate();
+        grid.render();
+    },
+    render: function() {
+        for(let x = 0; x < this.width; ++x){
+            for(let y = 0; y < this.height; ++y){
+
+                // Calculates index of current node
+                let index = (x) + (y*this.width); 
+
+                // Color of start square
+                if(this.startIndex===index) ctx.fillStyle="#00FF00";
+                // Color goal
+                else if(this.goalIndex===index) ctx.fillStyle="#FF0000";
+                // Color obstacle
+                else if(this.node[index].hasObstacle) ctx.fillStyle="#888888";
+                // Color visited square
+                else if(this.node[index].isVisited) ctx.fillStyle="#0000ff";
+                // default baby blue
+                else ctx.fillStyle="#ABCDEF";
+    
+                ctx.fillRect(
+                    x * (this.squareSize + this.spacing), 
+                    y * (this.squareSize + this.spacing), 
+                    this.squareSize, this.squareSize
+                );
+
+                // Color path from goal to start
+                ctx.fillStyle="#000000";
+                let parentNode = this.node[this.goalIndex].parentNode;
+                while(parentNode !== -1){
+                    ctx.fillRect(
+                        this.node[parentNode].x * (this.squareSize + this.spacing), 
+                        this.node[parentNode].y * (this.squareSize + this.spacing), 
+                        this.squareSize, this.squareSize
+                    );
+                    parentNode = this.node[parentNode].parentNode;
+                }
+            }
+        }
+    },
+
+    // Resets all nodes
+    reset: function() {
+        this.node.forEach((nodette) => {
+            nodette.isVisited = false;
+            nodette.distanceGoal = Infinity;
+            nodette.distanceStart = Infinity;
+            nodette.parentNode = -1;
+        })
+    },
+
+    toggleObstacle: function(x, y) {
+        const index = (x) + (y*this.width);
+        if(this.node[index].hasObstacle) this.node[index].hasObstacle = false;
+        else this.node[index].hasObstacle = true;
+    },
+
+
+    
+
+
 
 
 }
